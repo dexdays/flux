@@ -1,12 +1,24 @@
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
-kind: ImagePolicy
+kind: ImageUpdateAutomation
 metadata:
-  name: podinfo
+  name: flux-system
   namespace: flux-system
 spec:
-  imageRepositoryRef:
-    name: podinfo
-  policy:
-    semver:
-      range: 5.0.x
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+    push:
+      branch: main
+  interval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  update:
+    path: ./flux
+    strategy: Setters

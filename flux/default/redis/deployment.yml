@@ -16,4 +16,4 @@ spec:
     spec:
       containers:
       - name: redis
-        image: redis:6.0.16 # {"$imagepolicy": "flux-system:redis"}
+        image: redis:6.0.0 # {"$imagepolicy": "flux-system:redis"}
