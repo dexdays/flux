@@ -1,0 +1,74 @@
+
+#https://gist.github.com/icebob/958b6aeb0703dc24f436ee8945f0794f
+
+# Install K3S
+curl -sfL https://get.k3s.io | sh -
+
+# Copy k3s config
+mkdir $HOME/.kube
+sudo cp /etc/rancher/k3s/k3s.yaml $HOME/.kube/config
+sudo chmod 644 $HOME/.kube/config
+
+# Check K3S 
+kubectl get pods -n kube-system
+
+# Create Storage class
+# kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+# kubectl get storageclass
+
+# Download & install Helm
+curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get > install-helm.sh
+chmod u+x install-helm.sh
+./install-helm.sh
+
+# Link Helm with Tiller
+kubectl -n kube-system create serviceaccount tiller
+kubectl create clusterrolebinding tiller --clusterrole cluster-admin --serviceaccount=kube-system:tiller
+helm init --service-account tiller
+
+# Check Helm
+helm repo update
+helm search postgres
+
+# Install NATS with Helm
+# https://hub.helm.sh/charts/bitnami/nats
+helm install --name nats --namespace demo \
+	--set auth.enabled=true,auth.user=admin,auth.password=admin1234 \
+	stable/nats
+	
+# Check
+helm list
+kubectl svc -n demo
+
+# Create a port forward to NATS (blocking the terminal)
+kubectl port-forward svc/nats-client 4222 -n demo
+
+# Delete NATS
+helm delete nats
+
+# Working DNS with ufw  https://github.com/rancher/k3s/issues/24#issuecomment-515003702
+# sudo ufw allow in on cni0 from 10.42.0.0/16 comment "K3s rule"
+
+
+
+
+#https://technotim.live/posts/flux-devops-gitops/#helm-controller-installing-helm-charts
+
+Install Flux CLI
+curl -s https://fluxcd.io/install.sh | sudo bash
+Installing Flux using a GitHub Repo
+
+You’ll need to grab a personal access token from here
+
+flux bootstrap github \
+  --components-extra=image-reflector-controller,image-automation-controller \
+  --owner=YourGitHUbUserName \
+  --repository=flux \
+  --branch=main \
+  --path=clusters/home \
+  --personal \
+  --token-auth
+
+Check flux pods
+
+kubectl get pods -n flux-system
